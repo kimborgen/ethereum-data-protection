@@ -72,6 +72,12 @@ contract EthereumDataProtection is ERC721Council, Ownable {
 
     // setSeat
 
-    // addSeat
+    function setSeat(address newMember, uint256 tokenId) public onlyOwner {
+        _setSeat(newMember, tokenId);
+    }
+
+    function addSeat(address newMember) public onlyOwner {
+        _addSeat(newMember);
+    }
 
 }
