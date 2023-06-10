@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+// import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "./IERC721Council";
 
 /**
@@ -11,32 +11,32 @@ import "./IERC721Council";
  * forked and modified from the openzeppelin implementation of ERC721
  TODO add implementation of ERC721Enumerable
  */
-contract ERC721Gov is ERC721Enumerable, IERC721Council, Ownable {
+contract ERC721Council is ERC721Enumerable, IERC721Council {
 
     // The amount of current seats is implicitly available at ERC721Enumerable.totalSupply()
     uint256 private _maxSeats;
 
     // Minimum amount of required votes for a proposal to pass
-    uint256 private _requiredVotes;
+    // uint256 private _requiredVotes;
 
     /**
      * @dev Initializes the contract and base contracts
      */
-    constructor(string memory name_, string memory symbol_, uint256 requiredVotes_, uint256 maxSeats_) {
+    constructor(string memory name_, string memory symbol_, uint256 maxSeats_) {
         ERC721(name_, symbol_)
-        _requiredVotes = requiredVotes_;
+        //_requiredVotes = requiredVotes_;
         _maxSeats = maxSeats_;
     }
 
     // @dev Gets the minimal amount of required votes
-    function requiredVotes() public view returns(uint256) {
-        return _requiredVotes;
-    }
+    //function requiredVotes() public view returns(uint256) {
+    //   return _requiredVotes;
+    //}
 
-    function setRequiredVotes(uint256 requiredVotes_) public onlyOwner {
-        require(requiredVotes_ <= _maxSeats, "The amount of required votes cannot be larger than the amount of seats");
-        _requiredVotes = requiredVotes_;
-    }
+    //function _setRequiredVotes(uint256 requiredVotes_) internal {
+    //    require(requiredVotes_ <= _maxSeats, "The amount of required votes cannot be larger than the amount of seats");
+    //    _requiredVotes = requiredVotes_;
+    //}
 
     /**
      * @dev Returns the current value of the _maxSeats variable.
@@ -50,20 +50,21 @@ contract ERC721Gov is ERC721Enumerable, IERC721Council, Ownable {
      * @dev Sets a new value for the _maxSeats variable.
      * @param maxSeats_ The new value to be set.
      */
-    function setMaxSeats(uint256 maxSeats_) public onlyOwner {
+    function _setMaxSeats(uint256 maxSeats_) public internal {
         _maxSeats = maxSeats_;
     }
 
-    function setSeat(address newMember, uint256 tokenId) public onlyOwner {
+    function _setSeat(address newMember, uint256 tokenId) internal {
         _requireMinted(tokenId);
         address oldMember = ownerOf(tokenId);
         _safeTransfer(oldMember, newMember, tokenId, 0);
     }
 
-    function addSeat(address newMember) public onlyOwner {
+    function _addSeat(address newMember) internal {
         // IDs are numerically iterating from 0
         // The new ID is the current number of tokens
         uint256 tokenId = totalSupply();
+        require(tokenId <= _maxSeats, "Maximum amount of tokens exists");
         _safeMint(newMember, tokenId);
     }
 
@@ -78,17 +79,17 @@ contract ERC721Gov is ERC721Enumerable, IERC721Council, Ownable {
 
     mapping(bytes32 => ERC721CouncilProposal) public councilProposals;
 
-    function addProposal(bytes32 hashedProposal, address submittedBy) public {
+    function _addProposal(bytes32 hashedProposal, address submittedBy) internal {
         CouncilProposal storage prop = councilProposals[hashedProposal];
         require(prop.hashedProposal == 0, "Proposal already exists");
 
         prop.hashedProposal = hashedProposal;
         prop.submittedBy = submittedBy;
-        prop.timestamp = block.timestamp;
+        prop.timestamp = block.timestamp; 
         prop.closed = false;
     }
 
-    function vote(bytes32 hashedProposal, uint256 tokenId, bool yesVote, string justification) public {
+    function _vote(bytes32 hashedProposal, uint256 tokenId, bool yesVote, string justification) internal {
         require(_isApprovedOrOwner(msg.sender, tokenId), "msg.sender is not approved or owner of given seat tokenId");
         require(justification.length > 0, "justification is empty");
         CouncilProposal storage prop = councilProposals[hashedProposal];

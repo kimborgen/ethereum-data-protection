@@ -3,11 +3,10 @@ pragma solidity ^0.8.19;
 
 // Uncomment this line to use console.log
 import "hardhat/console.sol";
+import "ERC721Council";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
-contract EthereumDataProtection {
-
-    //uint256 public RFDRequiredVotes;
-    //uint256 public amountCouncilMembers = 0;
+contract EthereumDataProtection is ERC721Council {
 
     // Lets define the problem of elections as out-of-scope, and assume there exist a set of DCP members
     // Due to standardization, this is best represented trough ERC-20 or ERC-721 tokens. ERC-20 is the most flexible
@@ -15,29 +14,61 @@ contract EthereumDataProtection {
     // council seats. A collection of ERC-721 exists, where the size of the collection is the number of seats.
     // If a person votes on an RFD, the vote is tied to the NFT rather than the person. So if there is a change in
     // DCP membership, if the new DCP member took over the NFT that already voted, the new member cannot vote.
+    // This is implemented in ERC721Council
 
-    constructor() {
-        
+    constructor(uint256 maxSeats_) {
+        ERC721Council("Ethereum Data Protection Council", "EDPC", maxSeats_)
     }
 
     // Requests For Deletion
-    struct RFD {
+    struct NewRFD {
         bool open;
         address submittedBy;
-        uint256 submittedInEpoch;
         uint256 requestBlockNumber;
         bytes32 requestTx;
         string requestJustification;
-        // DB Location?
-        uint256 yesVotes;
-        uint256 noVotes;
-        mapping (uint256 => uint256) yesVotes; // epoch number => yesVotes
-        mapping (uint256 => uint256) noVotes; // epoch number => noVotes 
-        mapping(address => string) DCPJustifications; // less need for epoch number
     }
 
-    // ID = hash(submittedBy, requestBlockNumber, requestTx, requestJustification)
-    mapping (bytes32 => RFD) RFDs;
+    function hashNewRFD(address submittedBy, uint256 requestBlockNumber, bytes32 requestTx, string requestJustification) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(submittedBy, requestBlockNumber, requestTx, requestJustification));
+    }
+
+    mapping (bytes32 => NewRFD) newRFDs;
+
+    function submitNewRFD(uint256 requestBlockNumber, bytes32 requestTx, string requestJustification) public {
+        bytes32 hsh = hashNewRFD(submittedBy, requestBlockNumber, requestTx, requestJustification);
+        NewRFD storage rfd = newRFDs[hsh];
+        require(rfd.submittedBy != address(0), "New RFD already exists");
+        rfd.submittedBy = msg.sender;
+        rfd.requestBlockNumber = requestBlockNumber;
+        rfd.requestTx = requestTx;
+        rfd.justification = justification;
+
+        _addProposal(hsh, msg.sender);
+    }
+
+    function vote(bytes32 hashedProposal, uint256 tokenId, bool yesVote, string justification) public {
+        CouncilProposal storage prop = councilProposals[hashedProposal];
+        require(prop.open, "proposal is not open");
+        _vote(hashedProposal, tokenId, yesVote, justification);
+
+        // check vote result
+        CouncilProposal storage prop = councilProposals[hashedProposal];
+        uint256 requiredVotes = maxSeats() / 2 + 1;
+        if (prop.yesVotes >= requiredVotes) {
+            // proposal passed
+            // TODO add RFD
+            prop.open = false;
+        } else if (prop.noVotes >= requiredVotes) {
+            // proposal failed
+            prop.open = false;
+        }
+    }
+
+    
+    
+
+
     
     // function submitRFD
 

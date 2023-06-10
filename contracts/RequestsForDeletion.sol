@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/ownership/Ownable.sol";
  * Ethereum node implementions should listen to this contract and process requests.
  * This contract is owned by a EthereumDataProtection instance.
  */
-contract RequestsForDeletions is Ownable {
+contract RequestsForDeletion is Ownable {
     
     Event AddedRFD(bytes32 indexed hashedProposal, bytes32 indexed requestTx);
     
@@ -21,7 +21,7 @@ contract RequestsForDeletions is Ownable {
 
     mapping (bytes32 => RFD) public requests;
 
-    function addRFD (bytes32 hashedProposal, bytes32 requestTx) public onlyOwner {
+    function addRFD(bytes32 hashedProposal, bytes32 requestTx) public onlyOwner {
         require(hashedProposal != 0, "hashedProposal cannot be empty");
         require(requestTx != 0, "requestTx cannot be empty");
         RFD storage req = requests[hashedProposal];
