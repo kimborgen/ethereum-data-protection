@@ -26,9 +26,6 @@ contract EthereumDataProtection is ERC721Council, Ownable {
     event RFDSubmitted(bytes32 indexed hashedProposal, address indexed submittedBy, uint256 requestBlockNumber, bytes32 requestTx, string requestJustification);
     event ProposalFinished(bytes32 indexed hashedProposal, bool indexed passed);
 
-    
-    
-
     // Requests For Deletion
     struct NewRFD {
         bool open;

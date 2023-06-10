@@ -7,25 +7,19 @@
 const hre = require("hardhat");
 
 async function main() {
+  const contract = await hre.ethers.getContractAt("EthereumDataProtection", "0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB");
+  //const contract = await EDP.attach()
+  console.log("Address: ", contract.target)
 
-  
-  const rfd = await hre.ethers.deployContract("RequestsForDeletion");
-  await rfd.waitForDeployment();
+  let members = await hre.ethers.getSigners() 
+  members = members.slice(0,9)
+  console.log("members ", members)
 
-  console.log(
-    `RFD deployed to ${rfd.target}`
-  );
-
-  let maxSeats = 10;
-    const edp = await hre.ethers.deployContract("EthereumDataProtection", [10, rfd.target]);
-    await edp.waitForDeployment()
-    console.log(`EDP deployed to ${edp.target} with ${maxSeats} maxSeats`)
-
-    // change ownership
-
-    await rfd.transferOwnership(edp.target)
-    console.log("Changed RFD contract ownership to EDP")
-
+  for (const member of members) {
+    let tx = await contract.addSeat(member.address)
+    const receipt = await tx.wait(5)
+    console.log(receipt.logs)
+  }
 }
 
   
