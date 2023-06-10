@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 // import "@openzeppelin/contracts/ownership/Ownable.sol";
-import "./IERC721Council";
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, 
  * forked and modified from the openzeppelin implementation of ERC721
  TODO add implementation of ERC721Enumerable
  */
-contract ERC721Council is ERC721Enumerable, IERC721Council {
+contract ERC721Council is ERC721Enumerable {
 
     // The amount of current seats is implicitly available at ERC721Enumerable.totalSupply()
     uint256 private _maxSeats;
@@ -22,8 +21,8 @@ contract ERC721Council is ERC721Enumerable, IERC721Council {
     /**
      * @dev Initializes the contract and base contracts
      */
-    constructor(string memory name_, string memory symbol_, uint256 maxSeats_) {
-        ERC721(name_, symbol_)
+    constructor(string memory name_, string memory symbol_, uint256 maxSeats_) ERC721(name_, symbol_) {
+        
         //_requiredVotes = requiredVotes_;
         _maxSeats = maxSeats_;
     }
@@ -50,14 +49,14 @@ contract ERC721Council is ERC721Enumerable, IERC721Council {
      * @dev Sets a new value for the _maxSeats variable.
      * @param maxSeats_ The new value to be set.
      */
-    function _setMaxSeats(uint256 maxSeats_) public internal {
+    function _setMaxSeats(uint256 maxSeats_) internal {
         _maxSeats = maxSeats_;
     }
 
     function _setSeat(address newMember, uint256 tokenId) internal {
         _requireMinted(tokenId);
         address oldMember = ownerOf(tokenId);
-        _safeTransfer(oldMember, newMember, tokenId, 0);
+        _safeTransfer(oldMember, newMember, tokenId, new bytes(0));
     }
 
     function _addSeat(address newMember) internal {
@@ -77,7 +76,7 @@ contract ERC721Council is ERC721Enumerable, IERC721Council {
         mapping(uint256 => string) justification; // tokenId => justification , must be non empty string
     }
 
-    mapping(bytes32 => ERC721CouncilProposal) public councilProposals;
+    mapping(bytes32 => CouncilProposal) public councilProposals;
 
     function _addProposal(bytes32 hashedProposal, address submittedBy) internal {
         CouncilProposal storage prop = councilProposals[hashedProposal];
@@ -86,18 +85,17 @@ contract ERC721Council is ERC721Enumerable, IERC721Council {
         prop.hashedProposal = hashedProposal;
         prop.submittedBy = submittedBy;
         prop.timestamp = block.timestamp; 
-        prop.closed = false;
     }
 
-    function _vote(bytes32 hashedProposal, uint256 tokenId, bool yesVote, string justification) internal {
+    function _vote(bytes32 hashedProposal, uint256 tokenId, bool yesVote, string memory justification) internal {
         require(_isApprovedOrOwner(msg.sender, tokenId), "msg.sender is not approved or owner of given seat tokenId");
-        require(justification.length > 0, "justification is empty");
+        require(bytes(justification).length > 0, "justification is empty");
         CouncilProposal storage prop = councilProposals[hashedProposal];
-        require(prop.justification[tokenId].length == 0, "tokenId already voted");
+        require(bytes(prop.justification[tokenId]).length == 0, "tokenId already voted");
         if (yesVote) {
-            prop.yesVote += 1;
+            prop.yesVotes += 1;
         } else {
-            prop.noVote += 1;
+            prop.noVotes += 1;
         }
         prop.justification[tokenId] = justification;
     }

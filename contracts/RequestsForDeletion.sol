@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev This contracts stores sucesfully processed Requests For Deletion
@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/ownership/Ownable.sol";
  */
 contract RequestsForDeletion is Ownable {
     
-    Event AddedRFD(bytes32 indexed hashedProposal, bytes32 indexed requestTx);
+    event AddedRFD(bytes32 indexed hashedProposal, bytes32 indexed requestTx);
     
     struct RFD {
         bytes32 hashedProposal;
