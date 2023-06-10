@@ -7,23 +7,29 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
 
-  const lockedAmount = hre.ethers.parseEther("0.001");
-
-  const lock = await hre.ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
-
-  await lock.waitForDeployment();
+  
+  const rfd = await hre.ethers.deployContract("RequestsForDeletion");
+  await rfd.waitForDeployment();
 
   console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
+    `RFD deployed to ${rfd.target}`
   );
+
+  let maxSeats = 10;
+    const edp = await hre.ethers.deployContract("EthereumDataProtection", [10, rfd.target]);
+    await edp.waitForDeployment()
+    console.log(`EDP deployed to ${edp.target} with ${maxSeats} maxSeats`)
+
+    // change ownership
+
+    await rfd.transferOwnership(edp.target)
+    console.log("Changed RFD contract ownership to EDP")
+
+
 }
+
+  
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
