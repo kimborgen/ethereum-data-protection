@@ -23,6 +23,12 @@ contract EthereumDataProtection is ERC721Council, Ownable {
         implementedRFDs = RequestsForDeletion(implementedRFDs_);
     }
 
+    event RFDSubmitted(bytes32 indexed hashedProposal, address indexed submittedBy, uint256 requestBlockNumber, bytes32 requestTx, string requestJustification);
+    event ProposalFinished(bytes32 indexed hashedProposal, bool indexed passed);
+
+    
+    
+
     // Requests For Deletion
     struct NewRFD {
         bool open;
@@ -48,6 +54,7 @@ contract EthereumDataProtection is ERC721Council, Ownable {
         rfd.requestJustification = requestJustification;
 
         _addProposal(hsh, msg.sender);
+        emit RFDSubmitted(hsh, msg.sender, requestBlockNumber, requestTx, requestJustification);
     }
 
     function vote(bytes32 hashedProposal, uint256 tokenId, bool yesVote, string memory justification) public {
@@ -64,9 +71,11 @@ contract EthereumDataProtection is ERC721Council, Ownable {
             // add RFD to list of sucesfull RFDs
             implementedRFDs.addRFD(hashedProposal, newRFDs[hashedProposal].requestTx);
             rfd.open = false;
+            emit ProposalFinished(hashedProposal, true);
         } else if (prop.noVotes >= requiredVotes) {
             // proposal failed
             rfd.open = false;
+            emit ProposalFinished(hashedProposal, false);
         }
     }
 

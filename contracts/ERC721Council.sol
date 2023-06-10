@@ -67,6 +67,10 @@ contract ERC721Council is ERC721Enumerable {
         _safeMint(newMember, tokenId);
     }
 
+    event ProposalAdded(bytes32 indexed hashedProposal, address indexed submittedBy, uint256 timestamp);
+    event VoteCasted(bytes32 indexed hashedProposal, address indexed voter, uint256 indexed tokenId, bool yesVote, string justification);
+
+
     struct CouncilProposal {
         bytes32 hashedProposal; // external id
         address submittedBy;
@@ -85,6 +89,7 @@ contract ERC721Council is ERC721Enumerable {
         prop.hashedProposal = hashedProposal;
         prop.submittedBy = submittedBy;
         prop.timestamp = block.timestamp; 
+        emit ProposalAdded(hashedProposal, submittedBy, block.timestamp);
     }
 
     function _vote(bytes32 hashedProposal, uint256 tokenId, bool yesVote, string memory justification) internal {
@@ -98,5 +103,6 @@ contract ERC721Council is ERC721Enumerable {
             prop.noVotes += 1;
         }
         prop.justification[tokenId] = justification;
+        emit VoteCasted(hashedProposal, msg.sender, tokenId, yesVote, justification);
     }
 }
